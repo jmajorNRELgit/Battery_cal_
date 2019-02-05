@@ -66,7 +66,7 @@ class TIM(tk.Tk):
 
         self.name = 'HEWLETT-PACKARD,34970A,0,13-2-2\n'
         self.rm = visa.ResourceManager()
-        self.inst = self.rm.open_resource('GPIB0::3::INSTR')
+        self.inst = self.rm.open_resource('GPIB3::3::INSTR')
 
         #check if connection is made
         if self.inst.query('*IDN?') == self.name:
@@ -155,7 +155,7 @@ class TIM(tk.Tk):
         file = self.text_box.get()
         print('{0} {1}.csv'.format(file, file_time))
 
-        df.to_csv('data/{0} {1}.csv'.format(file, file_time), index = None)
+        df.to_csv('TIM_data/{0} {1}.csv'.format(file, file_time), index = None)
 
 
 
