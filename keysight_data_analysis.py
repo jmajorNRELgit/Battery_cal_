@@ -16,7 +16,11 @@ def signaltonoise(a, axis=0, ddof=0):
 
 #file =  'C:/Users/jmajor/Desktop/github/Bat_cal/Data/Office_insulation_just moved Feb 05 2019, time_10_26_56.csv'
 
+<<<<<<< HEAD
 file = 'C:/Users/jmajor/Desktop/github/Battery_cal_/TIM_data/TIM_current_test_2 Feb 05 2019, time_12_22_38.csv'
+=======
+file = 'C:/Users/jmajor/Desktop/Battery_cal_/TIM_data/TIM_pulse_test_2 Feb 05 2019, time_14_02_35.csv'
+>>>>>>> 34d6329489bcba3e813b0f1c1a4c8ee88e7c3c5a
 
 df = pd.read_csv(file)
 
