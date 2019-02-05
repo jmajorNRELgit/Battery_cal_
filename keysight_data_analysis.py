@@ -16,7 +16,7 @@ def signaltonoise(a, axis=0, ddof=0):
 
 #file =  'C:/Users/jmajor/Desktop/github/Bat_cal/Data/Office_insulation_just moved Feb 05 2019, time_10_26_56.csv'
 
-file = 'C:/Users/jmajor/Desktop/github/Bat_cal/Data/current_cooldown Feb 05 2019, time_10_58_49.csv'
+file = 'C:/Users/jmajor/Desktop/github/Battery_cal_/Data/current_cooldown_1 Feb 05 2019, time_11_50_04.csv'
 
 df = pd.read_csv(file)
 
@@ -42,7 +42,8 @@ plt.plot(times,volts, 'ro')
 plt.plot(times,volts, 'b-')
 plt.plot(times, currents, 'o')
 plt.plot(times, currents, 'y-')
-plt.plot(times, base, 'ro')
-plt.plot(times, base, 'g-')
+#plt.plot(times, base, 'ro')
+#plt.plot(times, base, 'g-')
+plt.legend()
 plt.show()
 
