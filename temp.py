@@ -24,14 +24,14 @@ stop = 0
 def animate(i):
 
     times = app.times
-    TEG1 = app.TEG1
+    TEG = app.TEG
     currents = app.currents
     TEG2 = app.TEG2
     supply_voltage = app.supply_voltage
 
-    min_list_length = min([len(TEG2), len(TEG1), len(times)])
+    min_list_length = min([len(TEG2), len(TEG), len(times)])
     TEG2 = TEG2[:min_list_length]
-    TEG1 = TEG1[:min_list_length]
+    TEG = TEG[:min_list_length]
     currents = currents[:min_list_length]
     times = times[:min_list_length]
     supply_voltage = supply_voltage[:min_list_length]
@@ -43,8 +43,8 @@ def animate(i):
 
     if app.zoom1 == 0:
 
-        app.ax1.plot(times,TEG1, 'ro')
-        app.ax1.plot(times,TEG1, 'b-', label = 'TEG1')
+        app.ax1.plot(times,TEG, 'ro')
+        app.ax1.plot(times,TEG, 'b-', label = 'TEG')
         app.ax2.plot(times, currents, 'ro')
         app.ax2.plot(times, currents, 'y-', label = 'Current')
         app.ax1.plot(times, TEG2, 'ro')
@@ -53,8 +53,8 @@ def animate(i):
         app.ax2.plot(times, supply_voltage, 'p-', label = 'Supply voltage')
 
     else:
-        app.ax1.plot(times[zoom_level:],TEG1[zoom_level:], 'ro')
-        app.ax1.plot(times[zoom_level:],TEG1[zoom_level:], 'b-', label = 'TEG1')
+        app.ax1.plot(times[zoom_level:],TEG[zoom_level:], 'ro')
+        app.ax1.plot(times[zoom_level:],TEG[zoom_level:], 'b-', label = 'TEG')
         app.ax2.plot(times[zoom_level:], currents[zoom_level:], 'ro')
         app.ax2.plot(times[zoom_level:], currents[zoom_level:], 'y-', label = 'Current')
         app.ax1.plot(times[zoom_level:], TEG2[zoom_level:], 'ro')
@@ -85,7 +85,7 @@ class TIM(tk.Tk):
         self.button_frame()
 
         self.start = time.time()
-        self.TEG1 = []
+        self.TEG = []
         self.supply_voltage = []
         self.TEG2 = []
         self.currents = []
@@ -99,17 +99,18 @@ class TIM(tk.Tk):
 
         self.name = 'HEWLETT-PACKARD,34970A,0,13-2-2\n'
         self.rm = visa.ResourceManager()
-        self.DAQ = self.rm.open_resource('GPIB0::3::INSTR')
+        self.inst = self.rm.open_resource('GPIB0::3::INSTR')
 
         #check if connection is made
-        if self.DAQ.query('*IDN?') == self.name:
+        if self.inst.query('*IDN?') == self.name:
             print('Communication established with Keysight DAQ')
 
         else:
             print('Communication FAILED with Keysight DAQ')
 
 
-        self.power_supply = self.rm.open_resource('GPIB0::4::INSTR')
+
+
 
 
         self.thread1 = threading.Thread(target=self.workerThread1)
@@ -129,15 +130,15 @@ class TIM(tk.Tk):
                 time.sleep(1)
 
 
-            self.TEG1.append(float(self.DAQ.query('MEAS:volt:dc? 0.1, {0}, (@101)'.format(self.resolution))))
-            self.supply_voltage.append(float(self.DAQ.query('MEAS:volt:dc? AUTO, (@103)'.format(self.resolution))))
-            self.TEG2.append(float(self.DAQ.query('MEAS:volt:dc? 0.1, {0}, (@102)'.format(self.resolution))))
-            self.currents.append(float(self.DAQ.query('MEAS:curr:dc? AUTO, (@122)')))
+            self.TEG.append(float(self.inst.query('MEAS:volt:dc? 0.1, {0}, (@101)'.format(self.resolution))))
+            self.supply_voltage.append(float(self.inst.query('MEAS:volt:dc? AUTO, (@103)'.format(self.resolution))))
+            self.TEG2.append(float(self.inst.query('MEAS:volt:dc? 0.1, {0}, (@102)'.format(self.resolution))))
+            self.currents.append(float(self.inst.query('MEAS:curr:dc? AUTO, (@122)')))
             self.times.append(time.time() - self.start)
 
             if pri == 0:
-                print('Voltage NPLC: ' + self.DAQ.query('SENS:VOLT:DC:NPLC?  (@101,102,103)'))
-                print('Current NPLC: ' + self.DAQ.query('SENS:current:DC:NPLC?  (@122)'))
+                print('Voltage NPLC: ' + self.inst.query('SENS:VOLT:DC:NPLC?  (@101,102,103)'))
+                print('Current NPLC: ' + self.inst.query('SENS:current:DC:NPLC?  (@122)'))
                 pri = 1
 
 
@@ -170,45 +171,6 @@ class TIM(tk.Tk):
         self.text_box.grid(row=1, column = 1)
         self.text_box.focus_set()
 
-        spacer = ttk.Label(frame2, text = '' )
-        spacer.grid(row = 2, column = 0)
-        spacer2 = ttk.Label(frame2, text = '' )
-        spacer2.grid(row = 3, column = 0)
-
-        supply_voltage_label = ttk.Label(frame2, text = 'Set supply voltage (V): ' )
-        supply_voltage_label.grid(row = 4, column = 0)
-
-        supply_voltage_text_field = tk.StringVar(frame2, value='1')
-        self.supply_voltage_text_box = tk.Entry(frame2,textvariable = supply_voltage_text_field)
-        self.supply_voltage_text_box.grid(row=4, column = 1)
-        self.supply_voltage_text_box.focus_set()
-
-        supply_time_label = ttk.Label(frame2, text = 'Set pulse time (S): ' )
-        supply_time_label.grid(row = 5, column = 0)
-
-        supply_time_text_field = tk.StringVar(frame2, value='1')
-        self.supply_time_text_box = tk.Entry(frame2,textvariable = supply_time_text_field)
-        self.supply_time_text_box.grid(row=5, column = 1)
-        self.supply_time_text_box.focus_set()
-
-        supply_pulse_button = ttk.Button(frame2, text = 'Send power supply pulse', command = self.power_supply_pulse)
-        supply_pulse_button.grid(row = 6, column = 0)
-
-    def power_supply_pulse(self):
-
-        pulse_voltage = float(self.supply_voltage_text_box.get())
-        pulse_time = float(self.supply_time_text_box.get())
-        print('Power supply on, {0} Volts, {1} second(s)'.format(pulse_voltage, pulse_time))
-
-        def pulse_thread_function():
-
-            print('sleep start')
-            time.sleep(pulse_time)
-            print('sleep end')
-
-        self.pulse_thread = threading.Thread(target= pulse_thread_function)
-        self.pulse_thread.start(  )
-
 
     def zoom_graph(self):
         if self.zoom1 == 0:
@@ -225,24 +187,24 @@ class TIM(tk.Tk):
         print('unpaused')
         if self.resolution == .0000001:
             self.resolution = .000001
-            print('NPLC: ' + self.DAQ.query('SENS:VOLT:DC:NPLC?  (@101,102,103)'))
+            print('NPLC: ' + self.inst.query('SENS:VOLT:DC:NPLC?  (@101,102,103)'))
             self.pause = 0
 
         else:
             self.resolution = .0000001
-            print('NPLC: ' + self.DAQ.query('SENS:VOLT:DC:NPLC?  (@101,102,103)'))
+            print('NPLC: ' + self.inst.query('SENS:VOLT:DC:NPLC?  (@101,102,103)'))
             self.pause = 0
 
     def save_data(self):
 
-        min_list_length = min([len(app.TEG2), len(app.TEG1), len(app.times)])
+        min_list_length = min([len(app.TEG2), len(app.TEG), len(app.times)])
         app.TEG2 = app.TEG2[:min_list_length]
-        app.TEG1 = app.TEG1[:min_list_length]
+        app.TEG = app.TEG[:min_list_length]
         app.currents = app.currents[:min_list_length]
         app.times = app.times[:min_list_length]
         app.supply_voltage = app.supply_voltage[:min_list_length]
 
-        data = {'Time': app.times, 'Current': app.currents, 'TEG2': app.TEG2, 'TEG_voltage': app.TEG1, 'Supply_voltage' : app.supply_voltage}
+        data = {'Time': app.times, 'Current': app.currents, 'TEG2': app.TEG2, 'TEG_voltage': app.TEG, 'Supply_voltage' : app.supply_voltage}
 
         df = pd.DataFrame(data)
 
@@ -268,36 +230,36 @@ stop = 1
 #app.inst.close()
 
 
-min_list_length = min([len(app.TEG2), len(app.TEG1), len(app.times), len(app.supply_voltage)])
+min_list_length = min([len(app.TEG2), len(app.TEG), len(app.times), len(app.supply_voltage)])
 app.TEG2 = app.TEG2[:min_list_length]
-app.TEG1 = app.TEG1[:min_list_length]
+app.TEG = app.TEG[:min_list_length]
 app.currents = app.currents[:min_list_length]
 app.times = app.times[:min_list_length]
 app.supply_voltage = app.supply_voltage[:min_list_length]
 
 
 
-data = {'Time': app.times, 'Current': app.currents, 'TEG2': app.TEG2, 'TEG1': app.TEG1, 'Supply_voltage' : app.supply_voltage}
+data = {'Time': app.times, 'Current': app.currents, 'TEG2': app.TEG2, 'TEG_voltage': app.TEG, 'Supply_voltage' : app.supply_voltage}
 
 df = pd.DataFrame(data)
 #df.plot(x = 'Time')
 print('\n')
-print('TEG1 STD: ' + str(np.std(df['TEG1'])))
+print('TEG STD: ' + str(np.std(df['TEG_voltage'])))
 print('TEG2 STD: ' + str(np.std(df['TEG2'])))
 print('Current STD: ' + str(np.std(df['Current'])))
 print('\n')
-#print('TEG1 SNR: ' + str(np.abs(np.mean(df['TEG_voltage']) / np.std(df['TEG_voltage']))))
-#print('TEG2 SNR: ' + str(np.abs(np.mean(df['TEG2']) / np.std(df['TEG2']))))
-#print('Current SNR: ' + str(np.abs(np.mean(df['Current']) / np.std(df['Current']))))
-#print('\n')
-print('Seconds per sample: ' + str(float( df['Time'][-1:]/len(df['TEG1']))))
+print('TEG SNR: ' + str(np.abs(np.mean(df['TEG_voltage']) / np.std(df['TEG_voltage']))))
+print('TEG2 SNR: ' + str(np.abs(np.mean(df['TEG2']) / np.std(df['TEG2']))))
+print('Current SNR: ' + str(np.abs(np.mean(df['Current']) / np.std(df['Current']))))
+print('\n')
+print('Seconds per sample: ' + str(float( df['Time'][-1:]/len(df['TEG_voltage']))))
 
 #f = plt.figure(figsize=(15,7), dpi = 100) #creates the matplotlib figure
 #ax1 = f.add_subplot(211) #adds the top plot (full time and partial time plots)
 #ax2 = f.add_subplot(212) #adds the top plot (full time and partial time plots)
 #
-#ax1.plot(app.times, app.TEG1, 'ro')
-#ax1.plot(app.times, app.TEG1, 'b-', label = 'TEG1')
+#ax1.plot(app.times, app.TEG, 'ro')
+#ax1.plot(app.times, app.TEG, 'b-', label = 'TEG')
 #ax2.plot(app.times, app.currents, 'ro')
 #ax2.plot(app.times, app.currents, 'y-', label = 'Current')
 #ax1.plot(app.times, app.TEG2, 'ro')
