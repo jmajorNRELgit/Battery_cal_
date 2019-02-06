@@ -15,6 +15,7 @@ import pandas as pd
 import threading
 import visa
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 stop = 0
@@ -26,28 +27,37 @@ def animate(i):
     TEG = app.TEG
     currents = app.currents
     ground = app.ground
+    supply_voltage = app.supply_voltage
 
     min_list_length = min([len(ground), len(TEG), len(times)])
     ground = ground[:min_list_length]
     TEG = TEG[:min_list_length]
     currents = currents[:min_list_length]
     times = times[:min_list_length]
+    supply_voltage = supply_voltage[:min_list_length]
 
     app.ax1.clear()
+    app.ax2.clear()
     app.ax1.plot(times,TEG, 'ro')
     app.ax1.plot(times,TEG, 'b-', label = 'TEG')
-    app.ax1.plot(times, currents, 'ro')
-    app.ax1.plot(times, currents, 'y-', label = 'Current')
+    app.ax2.plot(times, currents, 'ro')
+    app.ax2.plot(times, currents, 'y-', label = 'Current')
     app.ax1.plot(times, ground, 'ro')
     app.ax1.plot(times, ground, 'g-', label = 'Ground')
-    app.ax1.legend()
+    app.ax2.plot(times, supply_voltage, 'ro')
+    app.ax2.plot(times, supply_voltage, 'p-', label = 'Supply voltage')
+
+    app.ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    app.ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 
 
 class TIM(tk.Tk):
 
-    f = Figure(figsize=(10,5), dpi = 100) #creates the matplotlib figure
-    ax1 = f.add_subplot(111) #adds the top plot (full time and partial time plots)
+    f = Figure(figsize=(15,7), dpi = 100) #creates the matplotlib figure
+    ax1 = f.add_subplot(211) #adds the top plot (full time and partial time plots)
+    ax2 = f.add_subplot(212) #adds the top plot (full time and partial time plots)
+
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
@@ -56,6 +66,7 @@ class TIM(tk.Tk):
 
         self.start = time.time()
         self.TEG = []
+        self.supply_voltage = []
         self.ground = []
         self.currents = []
         self.times = []
@@ -94,12 +105,13 @@ class TIM(tk.Tk):
 
 
             self.TEG.append(float(self.inst.query('MEAS:volt:dc? 0.1, {0}, (@101)'.format(self.resolution))))
+            self.supply_voltage.append(float(self.inst.query('MEAS:volt:dc? 10, (@103)'.format(self.resolution))))
             self.ground.append(float(self.inst.query('MEAS:volt:dc? 0.1, {0}, (@102)'.format(self.resolution))))
-            self.currents.append(float(self.inst.query('MEAS:curr:dc? min, (@122)')))
+            self.currents.append(float(self.inst.query('MEAS:curr:dc? (@122)')))
             self.times.append(time.time() - self.start)
 
             if pri == 0:
-                print('NPLC: ' + self.inst.query('SENS:VOLT:DC:NPLC?  (@101,102)'))
+                print('NPLC: ' + self.inst.query('SENS:VOLT:DC:NPLC?  (@101,102,103)'))
                 pri = 1
 
 
@@ -131,12 +143,12 @@ class TIM(tk.Tk):
         print('unpaused')
         if self.resolution == .0000001:
             self.resolution = .000001
-            print('NPLC: ' + self.inst.query('SENS:VOLT:DC:NPLC?  (@101,102)'))
+            print('NPLC: ' + self.inst.query('SENS:VOLT:DC:NPLC?  (@101,102,103)'))
             self.pause = 0
 
         else:
             self.resolution = .0000001
-            print('NPLC: ' + self.inst.query('SENS:VOLT:DC:NPLC?  (@101,102)'))
+            print('NPLC: ' + self.inst.query('SENS:VOLT:DC:NPLC?  (@101,102,103)'))
             self.pause = 0
 
     def save_data(self):
@@ -146,8 +158,9 @@ class TIM(tk.Tk):
         app.TEG = app.TEG[:min_list_length]
         app.currents = app.currents[:min_list_length]
         app.times = app.times[:min_list_length]
+        app.supply_voltage = app.supply_voltage[:min_list_length]
 
-        data = {'Time': app.times, 'Current': app.currents, 'Ground': app.ground, 'TEG_voltage': app.TEG}
+        data = {'Time': app.times, 'Current': app.currents, 'Ground': app.ground, 'TEG_voltage': app.TEG, 'Supply_voltage' : app.supply_voltage}
 
         df = pd.DataFrame(data)
 
@@ -173,16 +186,19 @@ stop = 1
 #app.inst.close()
 
 
-min_list_length = min([len(app.ground), len(app.TEG), len(app.times)])
+min_list_length = min([len(app.ground), len(app.TEG), len(app.times), len(app.supply_voltage)])
 app.ground = app.ground[:min_list_length]
 app.TEG = app.TEG[:min_list_length]
 app.currents = app.currents[:min_list_length]
 app.times = app.times[:min_list_length]
+app.supply_voltage = app.supply_voltage[:min_list_length]
 
-data = {'Time': app.times, 'Current': app.currents, 'Ground': app.ground, 'TEG_voltage': app.TEG}
+
+
+data = {'Time': app.times, 'Current': app.currents, 'Ground': app.ground, 'TEG_voltage': app.TEG, 'Supply_voltage' : app.supply_voltage}
 
 df = pd.DataFrame(data)
-df.plot(x = 'Time')
+#df.plot(x = 'Time')
 print('\n')
 print('TEG STD: ' + str(np.std(df['TEG_voltage'])))
 print('Ground STD: ' + str(np.std(df['Ground'])))
@@ -193,3 +209,19 @@ print('Ground SNR: ' + str(np.abs(np.mean(df['Ground']) / np.std(df['Ground'])))
 print('Current SNR: ' + str(np.abs(np.mean(df['Current']) / np.std(df['Current']))))
 print('\n')
 print('Samples per second: ' + str(float(len(df['TEG_voltage']) / df['Time'][-1:])))
+
+f = plt.figure(figsize=(15,7), dpi = 100) #creates the matplotlib figure
+ax1 = f.add_subplot(211) #adds the top plot (full time and partial time plots)
+ax2 = f.add_subplot(212) #adds the top plot (full time and partial time plots)
+
+ax1.plot(app.times, app.TEG, 'ro')
+ax1.plot(app.times, app.TEG, 'b-', label = 'TEG')
+ax2.plot(app.times, app.currents, 'ro')
+ax2.plot(app.times, app.currents, 'y-', label = 'Current')
+ax1.plot(app.times, app.ground, 'ro')
+ax1.plot(app.times, app.ground, 'g-', label = 'Ground')
+ax2.plot(app.times, app.supply_voltage, 'ro')
+ax2.plot(app.times, app.supply_voltage, 'p-', label = 'Supply voltage')
+ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
