@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-file = 'C:/Users/jmajor/Desktop/github/Battery_cal_/Data/bus bar pulse test_1 Feb 06 2019, time_12_00_55.csv'
+file = 'C:/Users/jmajor/Desktop/github/Battery_cal_/Data/Calibration_pulse_test_1 Feb 06 2019, time_14_54_23.csv'
 
 df = pd.read_csv(file)
 
@@ -35,13 +35,25 @@ f = plt.figure(figsize=(15,7), dpi = 100) #creates the matplotlib figure
 ax1 = f.add_subplot(211) #adds the top plot (full time and partial time plots)
 ax2 = f.add_subplot(212) #adds the top plot (full time and partial time plots)
 
-ax1.plot(df['Time'][low:high], df['TEG1'][low:high], 'ro')
-ax1.plot(df['Time'][low:high], df['TEG1'][low:high], 'b-', label = 'TEG1')
-ax2.plot(df['Time'][low:high], df['Current'][low:high], 'ro')
-ax2.plot(df['Time'][low:high], df['Current'][low:high], 'y-', label = 'Current')
-ax1.plot(df['Time'][low:high], df['TEG2'][low:high], 'ro')
-ax1.plot(df['Time'][low:high], df['TEG2'][low:high], 'g-', label = 'TEG2')
-ax2.plot(df['Time'][low:high], df['Supply_voltage'][low:high], 'ro')
-ax2.plot(df['Time'][low:high], df['Supply_voltage'][low:high], 'p-', label = 'Supply voltage')
+#ax1.plot(df['Time'][low:high], df['TEG1'][low:high], 'ro')
+#ax1.plot(df['Time'][low:high], df['TEG1'][low:high], 'b-', label = 'TEG1')
+#ax2.plot(df['Time'][low:high], df['Current'][low:high], 'ro')
+#ax2.plot(df['Time'][low:high], df['Current'][low:high], 'y-', label = 'Current')
+#ax1.plot(df['Time'][low:high], df['TEG2'][low:high], 'ro')
+#ax1.plot(df['Time'][low:high], df['TEG2'][low:high], 'g-', label = 'TEG2')
+#ax2.plot(df['Time'][low:high], df['Supply_voltage'][low:high], 'ro')
+#ax2.plot(df['Time'][low:high], df['Supply_voltage'][low:high], 'p-', label = 'Supply voltage')
+#ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+#ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+
+ax1.plot(df['TEG1'][low:high], 'ro-')
+ax1.plot( df['TEG1'][low:high], 'b-', label = 'TEG1')
+ax2.plot(df['Current'][low:high], 'ro')
+ax2.plot( df['Current'][low:high], 'y-', label = 'Current')
+ax1.plot(df['TEG2'][low:high], 'ro')
+ax1.plot(df['TEG2'][low:high], 'g-', label = 'TEG2')
+ax2.plot(df['Supply_voltage'][low:high], 'ro')
+ax2.plot(df['Supply_voltage'][low:high], 'p-', label = 'Supply voltage')
 ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
