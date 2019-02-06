@@ -99,7 +99,7 @@ class TIM(tk.Tk):
 
         self.name = 'HEWLETT-PACKARD,34970A,0,13-2-2\n'
         self.rm = visa.ResourceManager()
-        self.DAQ = self.rm.open_resource('GPIB0::3::INSTR')
+        self.DAQ = self.rm.open_resource('GPIB1::3::INSTR')
 
         #check if connection is made
         if self.DAQ.query('*IDN?') == self.name:
@@ -109,7 +109,7 @@ class TIM(tk.Tk):
             print('Communication FAILED with Keysight DAQ')
 
 
-        self.power_supply = self.rm.open_resource('GPIB0::4::INSTR')
+        self.power_supply = self.rm.open_resource('GPIB0::2::INSTR')
 
 
         self.thread1 = threading.Thread(target=self.workerThread1)
@@ -202,9 +202,13 @@ class TIM(tk.Tk):
 
         def pulse_thread_function():
 
-            print('sleep start')
+            print('Power on')
+            self.power_supply.write('APPL P25V, {0}, 1.0'.format(pulse_voltage))
+            self.power_supply.write('output:state on')
             time.sleep(pulse_time)
-            print('sleep end')
+            self.power_supply.write('APPL P25V, {0}, 1.0'.format(0))
+            self.power_supply.write('output:state off')
+            print('Power off')
 
         self.pulse_thread = threading.Thread(target= pulse_thread_function)
         self.pulse_thread.start(  )
