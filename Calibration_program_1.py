@@ -206,6 +206,8 @@ class TIM(tk.Tk):
 
             sleep_time = 2*60*60
 
+            time.sleep(sleep_time)
+
             #2V for 2 hours then two hour break
             self.power_supply.write('APPL P25V, 2, 1.0')
             self.power_supply.write('output:state on')
