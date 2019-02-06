@@ -170,7 +170,6 @@ app.mainloop()
 
 stop = 1
 
-app.inst.close()
 
 
 min_list_length = min([len(app.ground), len(app.volts), len(app.times)])
