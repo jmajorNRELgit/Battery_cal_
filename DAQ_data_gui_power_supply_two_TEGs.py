@@ -73,7 +73,7 @@ def animate(i):
 
 class TIM(tk.Tk):
 
-    f = Figure(figsize=(13,7), dpi = 100) #creates the matplotlib figure
+    f = Figure(figsize=(10,7), dpi = 100) #creates the matplotlib figure
     ax1 = f.add_subplot(211) #adds the top plot (full time and partial time plots)
     ax2 = f.add_subplot(212) #adds the top plot (full time and partial time plots)
 
@@ -99,7 +99,7 @@ class TIM(tk.Tk):
 
         self.name = 'HEWLETT-PACKARD,34970A,0,13-2-2\n'
         self.rm = visa.ResourceManager()
-        self.DAQ = self.rm.open_resource('GPIB1::3::INSTR')
+        self.DAQ = self.rm.open_resource('GPIB0::3::INSTR')
 
         #check if connection is made
         if self.DAQ.query('*IDN?') == self.name:
@@ -109,7 +109,7 @@ class TIM(tk.Tk):
             print('Communication FAILED with Keysight DAQ')
 
 
-        self.power_supply = self.rm.open_resource('GPIB0::2::INSTR')
+        self.power_supply = self.rm.open_resource('GPIB3::2::INSTR')
 
 
         self.thread1 = threading.Thread(target=self.workerThread1)
@@ -296,18 +296,18 @@ print('\n')
 #print('\n')
 print('Seconds per sample: ' + str(float( df['Time'][-1:]/len(df['TEG1']))))
 
-#f = plt.figure(figsize=(15,7), dpi = 100) #creates the matplotlib figure
-#ax1 = f.add_subplot(211) #adds the top plot (full time and partial time plots)
-#ax2 = f.add_subplot(212) #adds the top plot (full time and partial time plots)
-#
-#ax1.plot(app.times, app.TEG1, 'ro')
-#ax1.plot(app.times, app.TEG1, 'b-', label = 'TEG1')
-#ax2.plot(app.times, app.currents, 'ro')
-#ax2.plot(app.times, app.currents, 'y-', label = 'Current')
-#ax1.plot(app.times, app.TEG2, 'ro')
-#ax1.plot(app.times, app.TEG2, 'g-', label = 'TEG2')
-#ax2.plot(app.times, app.supply_voltage, 'ro')
-#ax2.plot(app.times, app.supply_voltage, 'p-', label = 'Supply voltage')
-#ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-#ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+f = plt.figure(figsize=(15,7), dpi = 100) #creates the matplotlib figure
+ax1 = f.add_subplot(211) #adds the top plot (full time and partial time plots)
+ax2 = f.add_subplot(212) #adds the top plot (full time and partial time plots)
+
+ax1.plot(app.times, app.TEG1, 'ro')
+ax1.plot(app.times, app.TEG1, 'b-', label = 'TEG1')
+ax2.plot(app.times, app.currents, 'ro')
+ax2.plot(app.times, app.currents, 'y-', label = 'Current')
+ax1.plot(app.times, app.TEG2, 'ro')
+ax1.plot(app.times, app.TEG2, 'g-', label = 'TEG2')
+ax2.plot(app.times, app.supply_voltage, 'ro')
+ax2.plot(app.times, app.supply_voltage, 'p-', label = 'Supply voltage')
+ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
