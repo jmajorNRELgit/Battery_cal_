@@ -246,7 +246,7 @@ class TIM(tk.Tk):
         app.times = app.times[:min_list_length]
         app.supply_voltage = app.supply_voltage[:min_list_length]
 
-        data = {'Time': app.times, 'Current': app.currents, 'TEG2': app.TEG2, 'TEG_voltage': app.TEG1, 'Supply_voltage' : app.supply_voltage}
+        data = {'Time': app.times, 'Current': app.currents, 'TEG2': app.TEG2, 'TEG1': app.TEG1, 'Supply_voltage' : app.supply_voltage}
 
         df = pd.DataFrame(data)
 
