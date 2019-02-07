@@ -73,7 +73,7 @@ def animate(i):
 
 class TIM(tk.Tk):
 
-    f = Figure(figsize=(13,7), dpi = 100) #creates the matplotlib figure
+    f = Figure(figsize=(10,7), dpi = 100) #creates the matplotlib figure
     ax1 = f.add_subplot(211) #adds the top plot (full time and partial time plots)
     ax2 = f.add_subplot(212) #adds the top plot (full time and partial time plots)
 
@@ -99,7 +99,7 @@ class TIM(tk.Tk):
 
         self.name = 'HEWLETT-PACKARD,34970A,0,13-2-2\n'
         self.rm = visa.ResourceManager()
-        self.DAQ = self.rm.open_resource('GPIB1::3::INSTR')
+        self.DAQ = self.rm.open_resource('GPIB0::3::INSTR')
 
         #check if connection is made
         if self.DAQ.query('*IDN?') == self.name:
@@ -109,7 +109,7 @@ class TIM(tk.Tk):
             print('Communication FAILED with Keysight DAQ')
 
 
-        self.power_supply = self.rm.open_resource('GPIB0::2::INSTR')
+        self.power_supply = self.rm.open_resource('GPIB3::2::INSTR')
 
 
         self.thread1 = threading.Thread(target=self.workerThread1)
@@ -205,31 +205,39 @@ class TIM(tk.Tk):
             print('Power on')
 
             sleep_time = 2*60*60
-
-            time.sleep(sleep_time)
-
+            
+            print('Starting calibration run')
+            for i in range(30):
+                time.sleep(1)
+                if i % 10 == 0:
+                    print(30-i)
+                    
+            print('Starting Calibration')
             #2V for 2 hours then two hour break
-            self.power_supply.write('APPL P25V, 2, 1.0')
+            self.power_supply.write('APPL P25V, .25, 1.0')
             self.power_supply.write('output:state on')
             time.sleep(sleep_time)
             self.power_supply.write('output:state off')
             self.save_data()
+            print('Done')
             time.sleep(sleep_time)
 
             #3V for 2 hours then two hour break
-            self.power_supply.write('APPL P25V, 3, 1.0')
+            self.power_supply.write('APPL P25V, .5, 1.0')
             self.power_supply.write('output:state on')
             time.sleep(sleep_time)
             self.power_supply.write('output:state off')
             self.save_data()
+            print('DOne')
             time.sleep(sleep_time)
 
             #4V for 2 hours then two hour break
-            self.power_supply.write('APPL P25V, 4, 1.0')
+            self.power_supply.write('APPL P25V, .75, 1.0')
             self.power_supply.write('output:state on')
             time.sleep(sleep_time)
             self.power_supply.write('output:state off')
             self.save_data()
+            print('Done')
             time.sleep(sleep_time)
 
 
@@ -266,14 +274,14 @@ class TIM(tk.Tk):
 
     def save_data(self):
 
-        min_list_length = min([len(app.TEG2), len(app.TEG1), len(app.times)])
-        app.TEG2 = app.TEG2[:min_list_length]
-        app.TEG1 = app.TEG1[:min_list_length]
-        app.currents = app.currents[:min_list_length]
-        app.times = app.times[:min_list_length]
-        app.supply_voltage = app.supply_voltage[:min_list_length]
+        min_list_length = min([len(app.TEG2), len(app.TEG1), len(app.times), len(app.currents)])
+        TEG2 = app.TEG2[:min_list_length]
+        TEG1 = app.TEG1[:min_list_length]
+        currents = app.currents[:min_list_length]
+        times = app.times[:min_list_length]
+        supply_voltage = app.supply_voltage[:min_list_length]
 
-        data = {'Time': app.times, 'Current': app.currents, 'TEG2': app.TEG2, 'TEG1': app.TEG1, 'Supply_voltage' : app.supply_voltage}
+        data = {'Time': times, 'Current': currents, 'TEG2': TEG2, 'TEG1': TEG1, 'Supply_voltage' : supply_voltage}
 
         df = pd.DataFrame(data)
 
