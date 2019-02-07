@@ -205,13 +205,13 @@ class TIM(tk.Tk):
             print('Power on')
 
             sleep_time = 2*60*60
-            
+
             print('Starting calibration run')
             for i in range(30):
                 time.sleep(1)
                 if i % 10 == 0:
                     print(30-i)
-                    
+
             print('Starting Calibration')
             #2V for 2 hours then two hour break
             self.power_supply.write('APPL P25V, .25, 1.0')
