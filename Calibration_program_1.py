@@ -43,24 +43,24 @@ def animate(i):
 
     if app.zoom1 == 0:
 
-        app.ax1.plot(times,TEG1, 'ro')
-        app.ax1.plot(times,TEG1, 'b-', label = 'TEG1')
-        app.ax2.plot(times, currents, 'ro')
-        app.ax2.plot(times, currents, 'y-', label = 'Current')
-        app.ax1.plot(times, TEG2, 'ro')
-        app.ax1.plot(times, TEG2, 'g-', label = 'TEG2')
-        app.ax2.plot(times, supply_voltage, 'ro')
-        app.ax2.plot(times, supply_voltage, 'p-', label = 'Supply voltage')
+
+        app.ax1.plot(times,TEG1, 'bo-', label = 'TEG1')
+
+        app.ax2.plot(times, currents, 'yo-', label = 'Current')
+
+        app.ax1.plot(times, TEG2, 'go-', label = 'TEG2')
+
+        app.ax2.plot(times, supply_voltage, 'po-', label = 'Supply voltage')
 
     else:
-        app.ax1.plot(times[zoom_level:],TEG1[zoom_level:], 'ro')
-        app.ax1.plot(times[zoom_level:],TEG1[zoom_level:], 'b-', label = 'TEG1')
-        app.ax2.plot(times[zoom_level:], currents[zoom_level:], 'ro')
-        app.ax2.plot(times[zoom_level:], currents[zoom_level:], 'y-', label = 'Current')
-        app.ax1.plot(times[zoom_level:], TEG2[zoom_level:], 'ro')
-        app.ax1.plot(times[zoom_level:], TEG2[zoom_level:], 'g-', label = 'TEG2')
-        app.ax2.plot(times[zoom_level:], supply_voltage[zoom_level:], 'ro')
-        app.ax2.plot(times[zoom_level:], supply_voltage[zoom_level:], 'p-', label = 'Supply voltage')
+
+        app.ax1.plot(times[zoom_level:],TEG1[zoom_level:], 'bo-', label = 'TEG1')
+
+        app.ax2.plot(times[zoom_level:], currents[zoom_level:], 'yo-', label = 'Current')
+
+        app.ax1.plot(times[zoom_level:], TEG2[zoom_level:], 'go-', label = 'TEG2')
+
+        app.ax2.plot(times[zoom_level:], supply_voltage[zoom_level:], 'po-', label = 'Supply voltage')
 
 
 

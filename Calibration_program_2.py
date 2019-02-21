@@ -18,8 +18,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-stop = 0
+import psutil
 
+
+
+
+
+'''
+Enter calibration parameters here
+'''
+#####################################################
+voltages_to_test = [1,2,3]
+durations_of_tests_in_seconds = [3600,3600,3600]
+duration_of_sleep_after_tests_in_seconds = [3600,3600,3600]
+#####################################################
+
+
+
+
+
+
+
+stop = 0
 
 def animate(i):
 
@@ -43,24 +63,24 @@ def animate(i):
 
     if app.zoom1 == 0:
 
-        app.ax1.plot(times,TEG1, 'ro')
-        app.ax1.plot(times,TEG1, 'b-', label = 'TEG1')
-        app.ax2.plot(times, currents, 'ro')
-        app.ax2.plot(times, currents, 'y-', label = 'Current')
-        app.ax1.plot(times, TEG2, 'ro')
-        app.ax1.plot(times, TEG2, 'g-', label = 'TEG2')
-        app.ax2.plot(times, supply_voltage, 'ro')
-        app.ax2.plot(times, supply_voltage, 'p-', label = 'Supply voltage')
+        app.ax1.plot(TEG1, 'ro')
+        app.ax1.plot(TEG1, 'b-', label = 'TEG1')
+        app.ax2.plot( currents, 'ro')
+        app.ax2.plot( currents, 'y-', label = 'Current')
+        app.ax1.plot( TEG2, 'ro')
+        app.ax1.plot( TEG2, 'g-', label = 'TEG2')
+        app.ax2.plot( supply_voltage, 'ro')
+        app.ax2.plot( supply_voltage, 'p-', label = 'Supply voltage')
 
     else:
-        app.ax1.plot(times[zoom_level:],TEG1[zoom_level:], 'ro')
-        app.ax1.plot(times[zoom_level:],TEG1[zoom_level:], 'b-', label = 'TEG1')
-        app.ax2.plot(times[zoom_level:], currents[zoom_level:], 'ro')
-        app.ax2.plot(times[zoom_level:], currents[zoom_level:], 'y-', label = 'Current')
-        app.ax1.plot(times[zoom_level:], TEG2[zoom_level:], 'ro')
-        app.ax1.plot(times[zoom_level:], TEG2[zoom_level:], 'g-', label = 'TEG2')
-        app.ax2.plot(times[zoom_level:], supply_voltage[zoom_level:], 'ro')
-        app.ax2.plot(times[zoom_level:], supply_voltage[zoom_level:], 'p-', label = 'Supply voltage')
+        app.ax1.plot(TEG1[zoom_level:], 'ro')
+        app.ax1.plot(TEG1[zoom_level:], 'b-', label = 'TEG1')
+        app.ax2.plot(currents[zoom_level:], 'ro')
+        app.ax2.plot(currents[zoom_level:], 'y-', label = 'Current')
+        app.ax1.plot(TEG2[zoom_level:], 'ro')
+        app.ax1.plot(TEG2[zoom_level:], 'g-', label = 'TEG2')
+        app.ax2.plot(supply_voltage[zoom_level:], 'ro')
+        app.ax2.plot(supply_voltage[zoom_level:], 'p-', label = 'Supply voltage')
 
 
 
@@ -78,8 +98,13 @@ class TIM(tk.Tk):
     ax2 = f.add_subplot(212) #adds the top plot (full time and partial time plots)
 
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, volts,duration,sleep, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
+
+
+        self.voltages_to_test = volts
+        self.durations_of_tests_in_seconds = duration
+        self.duration_of_sleep_after_tests_in_seconds = sleep
 
         self.graph_frame()
         self.button_frame()
@@ -90,6 +115,9 @@ class TIM(tk.Tk):
         self.TEG2 = []
         self.currents = []
         self.times = []
+
+        self.ram = []
+
 
         self.zoom1 = 0
 
@@ -135,15 +163,18 @@ class TIM(tk.Tk):
             self.currents.append(float(self.DAQ.query('MEAS:curr:dc? AUTO, (@122)')))
             self.times.append(time.time() - self.start)
 
+            self.ram.append(psutil.virtual_memory()[1])
+
             if len(self.TEG1) % 5000 == 0:
                 self.save_data()
 
-                self.start = time.time()
                 self.TEG1 = []
                 self.supply_voltage = []
                 self.TEG2 = []
                 self.currents = []
                 self.times = []
+
+
 
             if pri == 0:
                 print('Voltage NPLC: ' + self.DAQ.query('SENS:VOLT:DC:NPLC?  (@101,102,103)'))
@@ -178,45 +209,26 @@ class TIM(tk.Tk):
         self.text_box.grid(row=1, column = 1)
         self.text_box.focus_set()
 
-        spacer = ttk.Label(frame2, text = '' )
-        spacer.grid(row = 2, column = 0)
-        spacer2 = ttk.Label(frame2, text = '' )
-        spacer2.grid(row = 3, column = 0)
 
-        pulse1_voltage_label = ttk.Label(frame2, text = 'Set pulse1 voltage (V): ' )
-        pulse1_voltage_label.grid(row = 4, column = 0)
-
-        pulse1_voltage_text_field = tk.StringVar(frame2, value='1')
-        self.pulse1_voltage_text_box = tk.Entry(frame2,textvariable = pulse1_voltage_text_field)
-        self.pulse1_voltage_text_box.grid(row=4, column = 1)
-        self.pulse1_voltage_text_box.focus_set()
-
-        pulse1_time_text_box = ttk.Label(frame2, text = 'Set pulse1 time (S): ' )
-        pulse1_time_text_box.grid(row = 5, column = 0)
-
-        pulse1_time_text_field = tk.StringVar(frame2, value='1')
-        self.pulse1_time_text_box = tk.Entry(frame2,textvariable = pulse1_time_text_field)
-        self.pulse1_time_text_box.grid(row=5, column = 1)
-        self.pulse1_time_text_box.focus_set()
-
-        supply_pulse_button = ttk.Button(frame2, text = 'Send power supply pulse', command = self.power_supply_pulse)
+        supply_pulse_button = ttk.Button(frame2, text = 'Start calibration', command = self.power_supply_pulse)
         supply_pulse_button.grid(row = 6, column = 0)
 
     def power_supply_pulse(self):
 
-        pulse_voltage = float(self.pulse1_voltage_text_box.get())
-        pulse_time = float(self.pulse1_time_text_box.get())
-        print('Power supply on, {0} Volts, {1} second(s)'.format(pulse_voltage, pulse_time))
+
 
         def pulse_thread_function():
 
-            print('Power on')
-            self.power_supply.write('APPL P25V, {0}, 1.0'.format(pulse_voltage))
-            self.power_supply.write('output:state on')
-            time.sleep(pulse_time)
-            self.power_supply.write('APPL P25V, {0}, 1.0'.format(0))
-            self.power_supply.write('output:state off')
-            print('Power off')
+            for i in range(len(self.voltages_to_test)):
+
+                print('Power on')
+                self.power_supply.write('APPL P25V, {0}, 1.0'.format(self.voltages_to_test[i]))
+                self.power_supply.write('output:state on')
+                time.sleep(self.durations_of_tests_in_seconds[i])
+                self.power_supply.write('APPL P25V, {0}, 1.0'.format(0))
+                self.power_supply.write('output:state off')
+                print('Power off')
+                time.sleep(self.duration_of_sleep_after_tests_in_seconds[i])
 
         self.pulse_thread = threading.Thread(target= pulse_thread_function)
         self.pulse_thread.start(  )
@@ -256,7 +268,8 @@ class TIM(tk.Tk):
 
 
 
-app = TIM()
+app = TIM(voltages_to_test, durations_of_tests_in_seconds, duration_of_sleep_after_tests_in_seconds)
+
 ani = animation.FuncAnimation(app.f,animate, interval = 1000)
 
 app.mainloop()
