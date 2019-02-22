@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Feb 21 14:02:57 2019
+Created on Fri Feb  1 09:52:07 2019
 
 @author: jmajor
 """
@@ -21,7 +21,7 @@ from numpy import random
 
 import psutil
 
-dry_run = 1
+dry_run = 0
 
 
 
@@ -29,9 +29,10 @@ dry_run = 1
 Enter calibration parameters here
 '''
 #####################################################
-voltages_to_test = [1,2,3]
-durations_of_tests_in_seconds = [3600,3600,3600]
-duration_of_sleep_after_tests_in_seconds = [3600,3600,3600]
+initial_sleep = 10
+voltages_to_test = [1, 1.5, 2]
+durations_of_tests_in_seconds = [10,10,10]
+duration_of_sleep_after_tests_in_seconds = [10,10,10]
 #####################################################
 
 
@@ -44,49 +45,48 @@ stop = 0
 
 def animate(i):
 
-    times = app.times
     TEG1 = app.TEG1
     currents = app.currents
     TEG2 = app.TEG2
     supply_voltage = app.supply_voltage
 
-    min_list_length = min([len(TEG2), len(TEG1), len(times)])
-    TEG2 = TEG2[:min_list_length]
-    TEG1 = TEG1[:min_list_length]
-    currents = currents[:min_list_length]
-    times = times[:min_list_length]
-    supply_voltage = supply_voltage[:min_list_length]
+    min_list_length = min([len(app.TEG2), len(app.TEG1), len(app.times), len(app.cell_voltage), len(app.supply_voltage)])
+    TEG2 = app.TEG2[:min_list_length]
+    TEG1 = app.TEG1[:min_list_length]
+    currents = app.currents[:min_list_length]
+    cell_voltage = app.cell_voltage[:min_list_length]
+    supply_voltage = app.supply_voltage[:min_list_length]
 
     zoom_level = -80
 
     app.ax1.clear()
     app.ax2.clear()
+    app.ax3.clear()
+
 
     if app.zoom1 == 0:
 
-        app.ax1.plot(TEG1, 'ro')
-        app.ax1.plot(TEG1, 'b-', label = 'TEG1')
-        app.ax2.plot( currents, 'ro')
-        app.ax2.plot( currents, 'y-', label = 'Current')
-        app.ax1.plot( TEG2, 'ro')
-        app.ax1.plot( TEG2, 'g-', label = 'TEG2')
-        app.ax2.plot( supply_voltage, 'ro')
-        app.ax2.plot( supply_voltage, 'p-', label = 'Supply voltage')
+
+        app.ax1.plot(TEG1, 'bo-', label = 'TEG1')
+        app.ax3.plot( currents, 'yo-', label = 'Current')
+        app.ax1.plot( TEG2, 'go-', label = 'TEG2')
+        app.ax2.plot( supply_voltage, 'ro-', label = 'Supply voltage')
+        app.ax2.plot(cell_voltage, 'bo-', label = 'Cell voltage')
+        app.ax2.plot()
 
     else:
-        app.ax1.plot(TEG1[zoom_level:], 'ro')
-        app.ax1.plot(TEG1[zoom_level:], 'b-', label = 'TEG1')
-        app.ax2.plot(currents[zoom_level:], 'ro')
-        app.ax2.plot(currents[zoom_level:], 'y-', label = 'Current')
-        app.ax1.plot(TEG2[zoom_level:], 'ro')
-        app.ax1.plot(TEG2[zoom_level:], 'g-', label = 'TEG2')
-        app.ax2.plot(supply_voltage[zoom_level:], 'ro')
-        app.ax2.plot(supply_voltage[zoom_level:], 'p-', label = 'Supply voltage')
+
+        app.ax1.plot(TEG1[zoom_level:], 'bo-', label = 'TEG1')
+        app.ax3.plot(currents[zoom_level:], 'yo-', label = 'Current')
+        app.ax1.plot(TEG2[zoom_level:], 'go-', label = 'TEG2')
+        app.ax2.plot(supply_voltage[zoom_level:], 'ro-', label = 'Supply voltage')
+        app.ax2.plot(cell_voltage[zoom_level:], 'bo-', label = 'Cell voltage')
 
 
 
     app.ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     app.ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    app.ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     app.f.tight_layout()
 
@@ -95,17 +95,19 @@ def animate(i):
 class TIM(tk.Tk):
 
     f = Figure(figsize=(10,7), dpi = 100) #creates the matplotlib figure
-    ax1 = f.add_subplot(211) #adds the top plot (full time and partial time plots)
-    ax2 = f.add_subplot(212) #adds the top plot (full time and partial time plots)
+    ax1 = f.add_subplot(311) #adds the top plot (full time and partial time plots)
+    ax2 = f.add_subplot(312) #adds the top plot (full time and partial time plots)
+    ax3 = f.add_subplot(313) #adds the top plot (full time and partial time plots)
 
 
-    def __init__(self, volts,duration,sleep, *args, **kwargs):
+    def __init__(self, volts,duration,sleep, initia_sleep, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
 
         self.voltages_to_test = volts
         self.durations_of_tests_in_seconds = duration
         self.duration_of_sleep_after_tests_in_seconds = sleep
+        self.initial_sleep = initial_sleep
 
         self.graph_frame()
         self.button_frame()
@@ -113,6 +115,7 @@ class TIM(tk.Tk):
         self.start = time.time()
         self.TEG1 = []
         self.supply_voltage = []
+        self.cell_voltage = []
         self.TEG2 = []
         self.currents = []
         self.times = []
@@ -162,8 +165,10 @@ class TIM(tk.Tk):
 
                 self.TEG1.append(float(self.DAQ.query('MEAS:volt:dc? 0.1, {0}, (@101)'.format(self.resolution))))
                 self.supply_voltage.append(float(self.DAQ.query('MEAS:volt:dc? AUTO, (@103)'.format(self.resolution))))
+                self.cell_voltage.append(float(self.DAQ.query('MEAS:volt:dc? AUTO, (@104)'.format(self.resolution))))
                 self.TEG2.append(float(self.DAQ.query('MEAS:volt:dc? 0.1, {0}, (@102)'.format(self.resolution))))
                 self.currents.append(float(self.DAQ.query('MEAS:curr:dc? AUTO, (@122)')))
+
                 self.times.append(time.time() - self.start)
 
                 self.ram.append(psutil.virtual_memory()[1])
@@ -175,6 +180,7 @@ class TIM(tk.Tk):
                 self.TEG2.append(self.random_data())
                 self.currents.append(self.random_data())
                 self.times.append(time.time() - self.start)
+                self.cell_voltage.append(self.random_data())
 
                 self.ram.append(psutil.virtual_memory()[1])
                 time.sleep(1)
@@ -187,11 +193,12 @@ class TIM(tk.Tk):
                 self.TEG2 = []
                 self.currents = []
                 self.times = []
+                self.cell_voltage = []
 
 
             if dry_run == 0:
                 if pri == 0:
-                    print('Voltage NPLC: ' + self.DAQ.query('SENS:VOLT:DC:NPLC?  (@101,102,103)'))
+                    print('Voltage NPLC: ' + self.DAQ.query('SENS:VOLT:DC:NPLC?  (@101,102,103,104)'))
                     print('Current NPLC: ' + self.DAQ.query('SENS:current:DC:NPLC?  (@122)'))
                     pri = 1
 
@@ -233,7 +240,15 @@ class TIM(tk.Tk):
 
         def pulse_thread_function():
 
+            print('Started test. Initial sleep for {} seconds'.format(str(self.initial_sleep)))
+
+            for i in range(initial_sleep):
+                if i % 10 == 0:
+                    print(str(initial_sleep - i))
+                time.sleep(1)
+
             for i in range(len(self.voltages_to_test)):
+
 
                 print('Power on')
                 self.power_supply.write('APPL P25V, {0}, 1.0'.format(self.voltages_to_test[i]))
@@ -243,6 +258,7 @@ class TIM(tk.Tk):
                 self.power_supply.write('output:state off')
                 print('Power off')
                 time.sleep(self.duration_of_sleep_after_tests_in_seconds[i])
+                self.save_data(path = 'home_cal_data')
 
         self.pulse_thread = threading.Thread(target= pulse_thread_function)
         self.pulse_thread.start(  )
@@ -257,16 +273,23 @@ class TIM(tk.Tk):
 
 
 
-    def save_data(self):
+    def save_data(self, path = None):
 
-        min_list_length = min([len(app.TEG2), len(app.TEG1), len(app.times)])
-        app.TEG2 = app.TEG2[:min_list_length]
-        app.TEG1 = app.TEG1[:min_list_length]
-        app.currents = app.currents[:min_list_length]
-        app.times = app.times[:min_list_length]
-        app.supply_voltage = app.supply_voltage[:min_list_length]
+        if path == None:
+            path = 'data'
+        else:
+            path = path
 
-        data = {'Time': app.times, 'Current': app.currents, 'TEG2': app.TEG2, 'TEG1': app.TEG1, 'Supply_voltage' : app.supply_voltage}
+
+        min_list_length = min([len(app.TEG2), len(app.TEG1), len(app.times), len(app.cell_voltage), len(app.supply_voltage)])
+        TEG2 = app.TEG2[:min_list_length]
+        TEG1 = app.TEG1[:min_list_length]
+        currents = app.currents[:min_list_length]
+        cell_voltage = app.cell_voltage[:min_list_length]
+        times = app.times[:min_list_length]
+        supply_voltage = app.supply_voltage[:min_list_length]
+
+        data = {'Time': times, 'Current': currents, 'TEG2': TEG2, 'TEG1': TEG1, 'Supply_voltage' : supply_voltage, 'Cell_voltage': cell_voltage }
 
         df = pd.DataFrame(data)
 
@@ -274,7 +297,7 @@ class TIM(tk.Tk):
         file = self.text_box.get()
         print('{0} {1}.csv'.format(file, file_time))
 
-        df.to_csv('data/{0} {1}.csv'.format(file, file_time), index = None)
+        df.to_csv('{0}/{1} {2}.csv'.format(path, file,  file_time), index = None)
 
     def random_data(self):
         return random.randint(1,30)
@@ -285,7 +308,7 @@ class TIM(tk.Tk):
 
 
 
-app = TIM(voltages_to_test, durations_of_tests_in_seconds, duration_of_sleep_after_tests_in_seconds)
+app = TIM(voltages_to_test, durations_of_tests_in_seconds, duration_of_sleep_after_tests_in_seconds, initial_sleep)
 
 ani = animation.FuncAnimation(app.f,animate, interval = 1000)
 
@@ -296,42 +319,34 @@ stop = 1
 #app.inst.close()
 
 
-min_list_length = min([len(app.TEG2), len(app.TEG1), len(app.times), len(app.supply_voltage)])
+min_list_length = min([len(app.TEG2), len(app.TEG1), len(app.times), len(app.cell_voltage), len(app.supply_voltage)])
 TEG2 = app.TEG2[:min_list_length]
 TEG1 = app.TEG1[:min_list_length]
 currents = app.currents[:min_list_length]
+cell_voltage = app.cell_voltage[:min_list_length]
 times = app.times[:min_list_length]
 supply_voltage = app.supply_voltage[:min_list_length]
 
-
-
-data = {'Time': times, 'Current': currents, 'TEG2': TEG2, 'TEG1': TEG1, 'Supply_voltage' : supply_voltage}
+data = {'Time': times, 'Current': currents, 'TEG2': TEG2, 'TEG1': TEG1, 'Supply_voltage' : supply_voltage, 'Cell_voltage': cell_voltage }
 
 df = pd.DataFrame(data)
-#df.plot(x = 'Time')
-print('\n')
-print('TEG1 STD: ' + str(np.std(df['TEG1'])))
-print('TEG2 STD: ' + str(np.std(df['TEG2'])))
-print('Current STD: ' + str(np.std(df['Current'])))
-print('\n')
-#print('TEG1 SNR: ' + str(np.abs(np.mean(df['TEG_voltage']) / np.std(df['TEG_voltage']))))
-#print('TEG2 SNR: ' + str(np.abs(np.mean(df['TEG2']) / np.std(df['TEG2']))))
-#print('Current SNR: ' + str(np.abs(np.mean(df['Current']) / np.std(df['Current']))))
-#print('\n')
+
 print('Seconds per sample: ' + str(float( df['Time'][-1:]/len(df['TEG1']))))
 
 f = plt.figure(figsize=(15,7), dpi = 100) #creates the matplotlib figure
-ax1 = f.add_subplot(211) #adds the top plot (full time and partial time plots)
-ax2 = f.add_subplot(212) #adds the top plot (full time and partial time plots)
+ax1 = f.add_subplot(311) #adds the top plot (full time and partial time plots)
+ax2 = f.add_subplot(312) #adds the top plot (full time and partial time plots)
+ax3 = f.add_subplot(313) #adds the top plot (full time and partial time plots)
 
-ax1.plot(times, TEG1, 'ro')
-ax1.plot(times, TEG1, 'b-', label = 'TEG1')
-ax2.plot(times, currents, 'ro')
-ax2.plot(times, currents, 'y-', label = 'Current')
-ax1.plot(times, TEG2, 'ro')
-ax1.plot(times, TEG2, 'g-', label = 'TEG2')
-ax2.plot(times, supply_voltage, 'ro')
-ax2.plot(times, supply_voltage, 'p-', label = 'Supply voltage')
+
+ax1.plot(times, TEG1, 'bo-', label = 'TEG1')
+ax1.plot(times, TEG2, 'go-', label = 'TEG2')
+ax2.plot(times, supply_voltage, 'ro-', label = 'Supply voltage')
+ax2.plot(times, cell_voltage, 'bo-', label = 'Cell voltage')
+ax3.plot(times, currents, 'yo-', label = 'Current')
+
 ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
 
