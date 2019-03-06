@@ -1,0 +1,23 @@
+20AWG:
+
+	blk: bottom bus bar current
+	white: top bus bar current: to red to 122 I
+
+28AWG:
+
+	#2: 
+	blk:bottom bus supply voltage: 103
+	white: top but supply voltage: 103
+
+	#3:
+	blk. bottom cell voltage: 104
+	white: top cell voltage: 104
+
+	#4:
+	blk: bottom teg2 negative: 102
+	white: bottom teg2 possitive: 102
+
+
+	#5:
+	blk: top teg1 negative: 101
+	white: top teg1 possitive: 101	
