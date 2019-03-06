@@ -29,10 +29,10 @@ dry_run = 0
 Enter calibration parameters here
 '''
 #####################################################
-initial_sleep = 10
-voltages_to_test = [1, 1.5, 2]
-durations_of_tests_in_seconds = [10,10,10]
-duration_of_sleep_after_tests_in_seconds = [10,10,10]
+initial_sleep = 60*30
+voltages_to_test = [.25, .5, 1]
+durations_of_tests_in_seconds = [30*60,30*60,30*60]
+duration_of_sleep_after_tests_in_seconds = [30*60,30*60,30*60]
 #####################################################
 
 
@@ -141,7 +141,7 @@ class TIM(tk.Tk):
                 print('Communication FAILED with Keysight DAQ')
 
 
-            self.power_supply = self.rm.open_resource('GPIB0::4::INSTR')
+            self.power_supply = self.rm.open_resource('GPIB3::4::INSTR')
 
         else:
             print('it works')
