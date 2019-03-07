@@ -14,8 +14,13 @@ from scipy import signal
 #file = 'C:/Users/jmajor/Desktop/github/Battery_cal_/manually_saved_data/rad_cal_shakedown_1 Mar 05 2019, 09_29_46.csv'
 
 
-#bath, overnight, dc tests
-file = 'C:/Users/jmajor/Desktop/github/Battery_cal_/Experimental data/overnight_test Mar 05 2019, 11_03_10.csv'
+# first bath, overnight, dc tests
+#file = 'C:/Users/jmajor/Desktop/github/Battery_cal_/Experimental data/DC_pulse_overnight_1 Mar 05 2019, 11_03_10.csv'
+
+# second bath, overnight, dc test
+#file = 'C:/Users/jmajor/Desktop/github/Battery_cal_/Experimental data/DC_pulse_overnight_2 Mar 06 2019, 08_11_32.csv'
+
+file = 'C:/Users/jmajor/Desktop/github/Battery_cal_/manually_saved_data/rad_cal_shakedown_1 Mar 05 2019, 09_29_46.csv'
 
 df = pd.read_csv(file)
 #df = df[8300:25000]
